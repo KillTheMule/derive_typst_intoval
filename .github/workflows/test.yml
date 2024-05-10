@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-lates]
+        os: [windows-latest, macos-latest, ubuntu-latest]
         rust: [stable]
         include:
           - os: ubuntu-latest
@@ -27,10 +27,9 @@ jobs:
     - name: Setup ${{ matrix.rust}} toolchain
       run: |
           rustup toolchain install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
           cargo --version
           rustup show
-          rustup toolchain list
-          rustup target list
 
     - uses: Swatinem/rust-cache@v2
 

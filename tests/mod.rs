@@ -12,7 +12,26 @@ fn basic() {
   let m = MyStruct { field1: "xyz" };
 
   let v = Value::Dict(dict!(
-      "Field1" => "xyz".into_value(),
+      "field1" => "xyz".into_value(),
+  ));
+
+  assert_eq!(m.into_value(), v);
+
+}
+
+#[derive(IntoValue)]
+#[rename("AsLowerCamelCase")]
+struct MyStruct2 {
+  field_name: &'static str
+}
+
+#[test]
+fn rename_global() {
+
+  let m = MyStruct2 { field_name: "xyz" };
+
+  let v = Value::Dict(dict!(
+      "fieldName" => "xyz".into_value(),
   ));
 
   assert_eq!(m.into_value(), v);
@@ -50,9 +69,8 @@ fn nesting() {
   let m = Nested { field3: mystruct.clone() };
 
   let v = Value::Dict(dict!(
-      "Field3" => mystruct.into_value(),
+      "field3" => mystruct.into_value(),
   ));
 
   assert_eq!(m.into_value(), v);
-
 }

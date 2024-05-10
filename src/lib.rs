@@ -2,12 +2,13 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::spanned::Spanned;
 use syn::DeriveInput;
 use syn::Fields;
 use syn::Ident;
+//use syn::Ident;
 use syn::Result;
 
-use heck::ToUpperCamelCase;
 
 /// Return an error at the given item.
 macro_rules! bail {
@@ -29,18 +30,33 @@ macro_rules! bail {
 ///
 /// The result of
 /// [`Value::into_value()`](typst::foundations::IntoValue::into_value) will be a
-/// [`Value::Dict`](typst::foundations::Value::Dict), where the keys
-/// are the field names in UpperCamelCase. The `#[rename]` attribute can be used
-/// to override the key name. All fields need to implement
+/// [`Value::Dict`](typst::foundations::Value::Dict). The keys are the field
+/// names. All fields need to implement
 /// [`IntoValue`](typst::foundations::IntoValue)
 /// themselves, as the derived implementation will simply call
 /// [`Value::into_value()`](typst::foundations::IntoValue::into_value)
 /// on them.
 ///
+/// The keys can be globally renamed by using the `rename` attribute, which
+/// takes any struct name from [`heck`].
+/// 
+/// ```ignore
+/// #[derive(IntoValue)]
+/// #[rename(AsLowerCamelCase)]
+/// struct NeedsIntoValue {
+///   /// Gets keyed as `"field1"`
+///   field1: &'static str,
+///   /// Get keyed as `"fieldName"`
+///   field_name: usize,
+/// }
+/// ```
+///
+/// The `#[rename]` attribute on individual fields can be used
+/// to override the key name for a single field.
 /// ```ignore
 /// #[derive(IntoValue)]
 /// struct NeedsIntoValue {
-///   /// Gets keyed as `"Field1"`
+///   /// Gets keyed as `"field1"`
 ///   field1: &'static str,
 ///   /// Get keyed as `"custom field name"`
 ///   #[rename("custom field name")]
@@ -69,8 +85,16 @@ fn derive_intoval(item: DeriveInput) -> Result<TokenStream> {
 
     let mut fieldlist = vec![];
 
+    let rename_attr = item.attrs.iter().find(|attr| attr.path().is_ident("rename"));
+
+    let rename = if let Some(attr) = rename_attr {
+      attr.parse_args::<syn::LitStr>()?.value()
+    } else {
+      String::new()
+    };
+
     for field in &fields.named {
-        let Some(ref id) = field.ident else {
+        let Some(ref old_id) = field.ident else {
             bail!(field, "only named fields are supported");
         };
 
@@ -79,21 +103,33 @@ fn derive_intoval(item: DeriveInput) -> Result<TokenStream> {
             .iter()
             .find(|attr| attr.path().is_ident("rename"))
         {
-            attr.parse_args::<syn::LitStr>()?.value()
+            Some(attr.parse_args::<syn::LitStr>()?.value())
         } else {
-            id.to_string().to_upper_camel_case()
+          if rename.is_empty() {
+            Some(old_id.to_string())
+          } else {
+            None
+          }
         };
 
         fieldlist.push(Element {
-            ident: id.clone(),
-            new_id,
+          new_id,
+          old_id: old_id.to_string(),
+          ident: old_id.clone()
         });
     }
 
-    let dictentries = fieldlist.iter().map(|Element { ident, new_id }| {
+    let dictentries = fieldlist.iter().map(|Element { new_id, old_id, ident }| {
+      if let Some(n) = new_id {
         quote! {
-          #new_id => self.#ident.into_value()
+          #n => self.#ident.into_value()
         }
+      } else {
+        let f = syn::Ident::new(&rename, rename_attr.span());
+        quote! {
+          heck::#f(#old_id).to_string() => self.#ident.into_value()
+        }
+      }
     });
 
     Ok(quote! {
@@ -112,6 +148,7 @@ fn derive_intoval(item: DeriveInput) -> Result<TokenStream> {
 }
 
 struct Element {
-    ident: Ident,
-    new_id: String,
+  new_id: Option<String>,
+  old_id: String,
+  ident: Ident,
 }

@@ -4,10 +4,11 @@ on: [push, pull_request]
 
 jobs:
   test:
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: true
-      mastrix:
+      matrix:
         os: [windows-latest, macos-latest, ubuntu-lates]
         rust: [stable]
         include:

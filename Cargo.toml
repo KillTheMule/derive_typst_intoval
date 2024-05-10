@@ -1,0 +1,14 @@
+[package]
+name = "derive_typst_intoval"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+typst-macros = "0.11"
+quote = "*"
+syn = "*"
+typst = "0.11"
+heck = "*"

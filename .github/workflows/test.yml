@@ -1,0 +1,39 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+
+    strategy:
+      fail-fast: true
+      mastrix:
+        os: [windows-latest, macos-latest, ubuntu-lates]
+        rust: [stable]
+        include:
+          - os: ubuntu-latest
+            rust: beta
+          - os: ubuntu-latest
+            rust: nightly
+
+    env:
+      LANG: de_DE.UTF-8
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup ${{ matrix.rust}} toolchain
+      run: |
+          rustup toolchain install ${{ matrix.rust }}
+          cargo --version
+          rustup show
+          rustup toolchain list
+          rustup target list
+
+    - uses: Swatinem/rust-cache@v2
+
+    - name: Test
+      shell: bash
+      run: |
+        cargo test -- --nocapture

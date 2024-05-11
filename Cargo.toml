@@ -2,13 +2,17 @@
 name = "derive_typst_intoval"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["typst", "derive"]
+authors = ["KillTheMule <KillTheMule@users.noreply.github.com"]
+repository = "https://github.com/KillTheMule/derive_typst_intoval"
 
 [lib]
 proc-macro = true
 
 [dependencies]
 typst-macros = "0.11"
-quote = "*"
-syn = "*"
+quote = "1.0.36"
+syn = "2.0.61"
 typst = "0.11"
-heck = "*"
+heck = "0.4.1"

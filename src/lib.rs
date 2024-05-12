@@ -163,7 +163,8 @@ fn derive_intodict(item: DeriveInput) -> Result<proc_macro::TokenStream> {
     quote! {
       impl #ty {
         #[inline]
-        fn into_dict(self) -> typst::foundations::Dict {
+        #[must_use]
+        pub fn into_dict(self) -> typst::foundations::Dict {
           typst::foundations::dict!(
             #(#dictentries),*
           )
@@ -181,6 +182,7 @@ fn derive_intoval(item: DeriveInput) -> Result<proc_macro::TokenStream> {
     quote! {
       impl typst::foundations::IntoValue for #ty {
         #[inline]
+        #[must_use]
         fn into_value(self) -> typst::foundations::Value {
           let d = typst::foundations::dict!(
             #(#dictentries),*

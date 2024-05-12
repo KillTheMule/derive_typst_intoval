@@ -1,6 +1,7 @@
+//! A small helper crate for converting structs into typst
+//! [`Dicts`](typst::foundations::Dict) or [`Values`](typst::foundations::Value)
 extern crate proc_macro;
 
-use proc_macro::TokenStream;
 use quote::quote;
 use syn::{spanned::Spanned, Data, DeriveInput, Fields, Ident, Result};
 
@@ -58,12 +59,32 @@ macro_rules! bail {
 /// }
 /// ```
 #[proc_macro_derive(IntoValue, attributes(rename))]
-pub fn derive_into_value(item: TokenStream) -> TokenStream {
+pub fn derive_into_value(
+  item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
   let item = syn::parse_macro_input!(item as DeriveInput);
   derive_intoval(item).unwrap_or_else(|err| err.to_compile_error().into())
 }
 
-fn derive_intoval(item: DeriveInput) -> Result<TokenStream> {
+/// Implements a method `into_dict()` on `self` to convert the struct to a
+/// typst [`Dict`](typst::foundations::Dict).
+///
+/// Usage is exactly the same as that of
+/// [`derive(IntoValue)`](crate::IntoValue). Instead of deriving a trait, this
+/// directly implements the method on the struct. The method returns the
+/// [`Dict`](typst::foundations::Dict) direcly rather than wrapping it in a
+/// [`Value`](typst::foundations::Value).
+#[proc_macro_derive(IntoDict, attributes(rename))]
+pub fn derive_into_dict(
+  item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+  let item = syn::parse_macro_input!(item as DeriveInput);
+  derive_intodict(item).unwrap_or_else(|err| err.to_compile_error().into())
+}
+
+fn gather_input(
+  item: &DeriveInput,
+) -> Result<(&Ident, Vec<proc_macro2::TokenStream>)> {
   let ty = &item.ident;
 
   let Data::Struct(ref data) = &item.data else {
@@ -110,24 +131,51 @@ fn derive_intoval(item: DeriveInput) -> Result<TokenStream> {
     });
   }
 
-  let dictentries = fieldlist.iter().map(
-    |Element {
-       new_id,
-       old_id,
-       ident,
-     }| {
-      if let Some(ref n) = new_id {
-        quote! {
-          #n => self.#ident.into_value()
+  let dictentries: Vec<_> = fieldlist
+    .iter()
+    .map(
+      |Element {
+         new_id,
+         old_id,
+         ident,
+       }| {
+        if let Some(ref n) = new_id {
+          quote! {
+            #n => self.#ident.into_value()
+          }
+        } else {
+          let fun = syn::Ident::new(&rename, rename_attr.span());
+          quote! {
+            heck::#fun(#old_id).to_string() => self.#ident.into_value()
+          }
         }
-      } else {
-        let fun = syn::Ident::new(&rename, rename_attr.span());
-        quote! {
-          heck::#fun(#old_id).to_string() => self.#ident.into_value()
+      },
+    )
+    .collect();
+
+  Ok((ty, dictentries))
+}
+
+fn derive_intodict(item: DeriveInput) -> Result<proc_macro::TokenStream> {
+  let (ty, dictentries) = gather_input(&item)?;
+
+  Ok(
+    quote! {
+      impl #ty {
+        #[inline]
+        fn into_dict(self) -> typst::foundations::Dict {
+          typst::foundations::dict!(
+            #(#dictentries),*
+          )
         }
       }
-    },
-  );
+    }
+    .into(),
+  )
+}
+
+fn derive_intoval(item: DeriveInput) -> Result<proc_macro::TokenStream> {
+  let (ty, dictentries) = gather_input(&item)?;
 
   Ok(
     quote! {

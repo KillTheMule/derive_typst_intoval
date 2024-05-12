@@ -1,7 +1,7 @@
-use derive_typst_intoval::IntoValue;
+use derive_typst_intoval::{IntoValue, IntoDict};
 use typst::foundations::{dict, IntoValue, Value};
 
-#[derive(IntoValue, Clone)]
+#[derive(IntoValue, IntoDict, Clone)]
 struct MyStruct {
   field1: &'static str,
 }
@@ -14,10 +14,11 @@ fn basic() {
       "field1" => "xyz".into_value(),
   ));
 
-  assert_eq!(m.into_value(), v);
+  assert_eq!(m.clone().into_value(), v);
+  assert_eq!(Value::Dict(m.into_dict()), v);
 }
 
-#[derive(IntoValue)]
+#[derive(IntoValue, IntoDict, Clone)]
 #[rename("AsLowerCamelCase")]
 struct MyStruct2 {
   field_name: &'static str,
@@ -31,10 +32,11 @@ fn rename_global() {
       "fieldName" => "xyz".into_value(),
   ));
 
-  assert_eq!(m.into_value(), v);
+  assert_eq!(m.clone().into_value(), v);
+  assert_eq!(Value::Dict(m.into_dict()), v);
 }
 
-#[derive(IntoValue)]
+#[derive(IntoValue, IntoDict, Clone)]
 struct Rename {
   #[rename("customfieldname")]
   field1: &'static str,
@@ -48,10 +50,11 @@ fn renamimg() {
       "customfieldname" => "xyz".into_value(),
   ));
 
-  assert_eq!(m.into_value(), v);
+  assert_eq!(m.clone().into_value(), v);
+  assert_eq!(Value::Dict(m.into_dict()), v);
 }
 
-#[derive(IntoValue)]
+#[derive(IntoValue, IntoDict, Clone)]
 struct Nested {
   field3: MyStruct,
 }
@@ -67,5 +70,6 @@ fn nesting() {
       "field3" => mystruct.into_value(),
   ));
 
-  assert_eq!(m.into_value(), v);
+  assert_eq!(m.clone().into_value(), v);
+  assert_eq!(Value::Dict(m.into_dict()), v);
 }

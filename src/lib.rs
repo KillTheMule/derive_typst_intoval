@@ -36,7 +36,7 @@ macro_rules! bail {
 ///
 /// ```ignore
 /// #[derive(IntoValue)]
-/// #[rename(AsLowerCamelCase)]
+/// #[rename("AsLowerCamelCase")]
 /// struct NeedsIntoValue {
 ///   /// Gets keyed as `"field1"`
 ///   field1: &'static str,

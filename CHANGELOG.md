@@ -1,4 +1,8 @@
-# 0.4.0
+# 0.6.0
+
+Update typst to 0.14
+
+# 0.5.0
 
 Update dependencies (in particular, typst to 0.13)
 

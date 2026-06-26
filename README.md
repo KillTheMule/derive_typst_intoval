@@ -1,4 +1,7 @@
-# derive_typst_intoval ![CI](https://github.com/KillTheMule/derive_typst_intoval/actions/workflows/test.yml/badge.svg) ![(Docs.rs)](https://img.shields.io/docsrs/:derive_typst_intoval/:latest) [![(Crates.io status)](https://img.shields.io/crates/v/derive_typst_intoval.svg)](https://crates.io/crates/derive_typst_intoval)
+# derive_typst_intoval 
+![CI](https://github.com/KillTheMule/derive_typst_intoval/actions/workflows/test.yml/badge.svg)
+[![(Docs.rs)](https://img.shields.io/docsrs/:derive_typst_intoval/:latest)](https://docs.rs/derive_typst_intoval/latest/derive_typst_intoval)
+[![(Crates.io status)](https://img.shields.io/crates/v/derive_typst_intoval.svg)](https://crates.io/crates/derive_typst_intoval)
 A small derive macro to derive `IntoValue` for structs. I mainly use it myself to pack
 up the data for typst's [`inputs`](https://docs.rs/typst/latest/typst/struct.LibraryBuilder.html#method.with_inputs).
 

@@ -1,3 +1,7 @@
+# 0.7.0
+
+Update typst to 0.15
+
 # 0.6.0
 
 Update typst to 0.14
